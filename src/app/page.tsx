@@ -1,103 +1,168 @@
-import Image from "next/image";
+// ...existing code...
+"use client"
 
-export default function Home() {
+import React, { useEffect, useRef } from "react"
+import { SongPlayer } from "./SongPlayer"
+import { GuessForm } from "./GuessForm"
+import { SongResult } from "./SongResult"
+import { normalize } from "./normalize"
+import { useSongStore } from "./store"
+import { StepIndicator } from "./StepIndicator"
+import { CustomAlert } from "./CustomAlert"
+
+interface Song {
+  title: string
+  artist: string
+  preview: string
+  cover: string
+}
+
+// Componente principal de la página
+export default function Page() {
+  const [showCongrats, setShowCongrats] = React.useState(false)
+  const song = useSongStore((s) => s.song)
+  const setSong = useSongStore((s) => s.setSong)
+  const step = useSongStore((s) => s.step)
+  const setStep = useSongStore((s) => s.setStep)
+  const loading = useSongStore((s) => s.loading)
+  const setLoading = useSongStore((s) => s.setLoading)
+  const started = useSongStore((s) => s.started)
+  const setStarted = useSongStore((s) => s.setStarted)
+  const guess = useSongStore((s) => s.guess)
+  const setGuess = useSongStore((s) => s.setGuess)
+  const suggestions = useSongStore((s) => s.suggestions)
+  const setSuggestions = useSongStore((s) => s.setSuggestions)
+  const isPlaying = useSongStore((s) => s.isPlaying)
+  const setIsPlaying = useSongStore((s) => s.setIsPlaying)
+  const debounceRef = useRef<NodeJS.Timeout | null>(null)
+  const audioRef = useRef<HTMLAudioElement>(null)
+
+  // Reproduce el preview de la canción solo por la cantidad de segundos del paso actual o pausa si ya está sonando
+  const handlePlayPause = () => {
+    const audio = audioRef.current
+    if (!audio) return
+    if (isPlaying) {
+      audio.pause()
+      setIsPlaying(false)
+      return
+    }
+    audio.currentTime = 0
+    audio.volume = 0.3
+    audio.play()
+    setIsPlaying(true)
+    setTimeout(() => {
+      audio.pause()
+      setIsPlaying(false)
+    }, stepDurations[step] * 1000)
+  }
+  // Página principal del clon de Bandle/Songless
+  // Permite escuchar previews de canciones latinas/urbanas en 5 pasos
+  // Solo cargar la canción cuando el usuario haga click en Start
+  useEffect(() => {
+    if (started) {
+      fetchSong()
+    }
+  }, [started])
+
+  // Consulta la API interna para obtener una canción aleatoria
+  const fetchSong = async () => {
+    setLoading(true)
+    setStep(1)
+    setGuess("")
+    setSuggestions([])
+    const res = await fetch("/api/song")
+    if (res.ok) {
+      const data = await res.json()
+      setSong(data)
+    }
+    setLoading(false)
+  }
+
+  // Avanza al siguiente paso (máximo 5)
+  const handleNext = () => {
+    if (step < 5) {
+      setStep(step + 1)
+    }
+  }
+
+  // Reinicia el audio cada vez que cambia la canción o el paso
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = 0
+      audioRef.current.pause()
+      audioRef.current.load()
+    }
+  }, [song, step])
+
+  // Duraciones personalizadas por paso
+  const stepDurations = [0, 0.5, 2, 5, 10, 20] // índice 1 a 5
+
+  // Actualiza el estado isPlaying según eventos del audio
+  useEffect(() => {
+    const audio = audioRef.current
+    if (!audio) return
+    const onPlay = () => setIsPlaying(true)
+    const onPause = () => setIsPlaying(false)
+    audio.addEventListener("play", onPlay)
+    audio.addEventListener("pause", onPause)
+    return () => {
+      audio.removeEventListener("play", onPlay)
+      audio.removeEventListener("pause", onPause)
+    }
+  }, [audioRef])
+
+  // Validar intento del usuario
+  const handleGuess = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!song) return
+    if (normalize(guess) === normalize(song.title)) {
+      setShowCongrats(true)
+    } else {
+      setGuess("")
+      setSuggestions([])
+      handleNext()
+    }
+  }
+
+  // Renderizado principal
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <main className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white p-4">
+      <h1 className="text-3xl font-bold mb-4">Songless Latino</h1>
+      {/* Si no ha iniciado, mostrar botón Start */}
+      {!started && (
+        <div className="text-center mb-8 flex flex-col items-center gap-5">
+          <p>¡Bienvenido a Songless Latino! Adivina la canción.</p>
+          <button className="bg-yellow-500 px-8 py-3 rounded text-xl font-bold mb-4 hover:bg-yellow-600 transition" onClick={() => setStarted(true)}>
+            Start
+          </button>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+      )}
+      {/* Mensaje de carga */}
+      {started && loading && <p>Cargando canción...</p>}
+      {/* Si hay canción, mostrar reproductor y controles */}
+      {started && song && (
+        <div className="flex flex-col items-center">
+          <StepIndicator />
+          <SongPlayer />
+          <GuessForm onSubmit={handleGuess} />
+          <button
+            className="bg-green-600 px-6 py-2 rounded text-lg font-semibold mb-2 hover:bg-green-700 transition"
+            onClick={handleNext}
+            disabled={step >= 5 || loading}
+          >
+            Next
+          </button>
+          <button className="bg-gray-700 px-4 py-1 rounded text-sm mt-2 hover:bg-gray-800 transition" onClick={fetchSong} disabled={loading}>
+            Nueva canción
+          </button>
+          <div className="mt-6 text-center">
+            <p className="text-lg font-semibold">Pista: {step}/5</p>
+            <p className="text-md mt-2">¿Adivinas la canción?</p>
+            {step === 5 && <SongResult cover={song.cover} title={song.title} artist={song.artist} />}
+          </div>
+        </div>
+      )}
+      {showCongrats && <CustomAlert message="¡Adivinaste la canción! 🎶" onClose={() => setShowCongrats(false)} />}
+    </main>
+  )
 }
