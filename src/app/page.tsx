@@ -20,20 +20,25 @@ interface Song {
 // Componente principal de la página
 export default function Page() {
   const [showCongrats, setShowCongrats] = React.useState(false)
-  const song = useSongStore((s) => s.song)
-  const setSong = useSongStore((s) => s.setSong)
-  const step = useSongStore((s) => s.step)
-  const setStep = useSongStore((s) => s.setStep)
-  const loading = useSongStore((s) => s.loading)
-  const setLoading = useSongStore((s) => s.setLoading)
-  const started = useSongStore((s) => s.started)
-  const setStarted = useSongStore((s) => s.setStarted)
-  const guess = useSongStore((s) => s.guess)
-  const setGuess = useSongStore((s) => s.setGuess)
-  const suggestions = useSongStore((s) => s.suggestions)
-  const setSuggestions = useSongStore((s) => s.setSuggestions)
-  const isPlaying = useSongStore((s) => s.isPlaying)
-  const setIsPlaying = useSongStore((s) => s.setIsPlaying)
+  const {
+    song,
+    setSong,
+    setGuessedSongs,
+    step,
+    setStep,
+    loading,
+    setLoading,
+    started,
+    setStarted,
+    guess,
+    setGuess,
+    suggestions,
+    setSuggestions,
+    guessedSongs,
+    isPlaying,
+    setIsPlaying,
+    reset,
+  } = useSongStore()
   const debounceRef = useRef<NodeJS.Timeout | null>(null)
   const audioRef = useRef<HTMLAudioElement>(null)
 
@@ -64,12 +69,12 @@ export default function Page() {
     }
   }, [started])
 
-  // Consulta la API interna para obtener una canción aleatoria
+  // Consulta la API interna para obtener una canción aleatoria y reinicia todo
   const fetchSong = async () => {
+    // Reinicia todo el estado, pero luego vuelve a poner started en true
+    reset()
+    setStarted(true)
     setLoading(true)
-    setStep(1)
-    setGuess("")
-    setSuggestions([])
     const res = await fetch("/api/song")
     if (res.ok) {
       const data = await res.json()
@@ -82,6 +87,8 @@ export default function Page() {
   const handleNext = () => {
     if (step < 5) {
       setStep(step + 1)
+    } else {
+      setGuessedSongs(guessedSongs + 1)
     }
   }
 
@@ -118,6 +125,7 @@ export default function Page() {
     if (normalize(guess) === normalize(song.title)) {
       setShowCongrats(true)
     } else {
+      setStep(step + 1)
       setGuess("")
       setSuggestions([])
       handleNext()
@@ -145,13 +153,25 @@ export default function Page() {
           <StepIndicator />
           <SongPlayer />
           <GuessForm onSubmit={handleGuess} />
-          <button
-            className="bg-green-600 px-6 py-2 rounded text-lg font-semibold mb-2 hover:bg-green-700 transition"
-            onClick={handleNext}
-            disabled={step >= 5 || loading}
-          >
-            Next
-          </button>
+          {step < 5 && (
+            <div className="flex gap-4 ">
+              <button
+                className="bg-green-600 px-4 py-1 rounded text-lg font-semibold  hover:bg-green-700 transition"
+                onClick={handleNext}
+                disabled={step >= 5 || loading}
+              >
+                Next
+              </button>
+              <button
+                onClick={handleGuess}
+                className="bg-purple-600 px-4 py-1 rounded text-white font-semibold  hover:bg-purple-700 transition"
+                disabled={loading || !guess || step === 5}
+              >
+                Adivinar
+              </button>
+            </div>
+          )}
+
           <button className="bg-gray-700 px-4 py-1 rounded text-sm mt-2 hover:bg-gray-800 transition" onClick={fetchSong} disabled={loading}>
             Nueva canción
           </button>
@@ -162,7 +182,12 @@ export default function Page() {
           </div>
         </div>
       )}
-      {showCongrats && <CustomAlert message="¡Adivinaste la canción! 🎶" onClose={() => setShowCongrats(false)} />}
+      {showCongrats && (
+        <CustomAlert
+          message={guessedSongs < 3 ? "¡Adivinaste la canción! 🎶 " : " ¡Adivinaste la canción! 🎉 Vuelve mañana para mas contenido"}
+          onClose={() => setShowCongrats(false)}
+        />
+      )}
     </main>
   )
 }

@@ -13,22 +13,34 @@ export const SongPlayer: React.FC = () => {
   // Estado para el contador regresivo
   const [remaining, setRemaining] = useState(0)
   const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null)
+  const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null)
+
+  // Limpia audio y timers
+  const cleanAudio = () => {
+    if (intervalId) clearInterval(intervalId)
+    if (timeoutId) clearTimeout(timeoutId)
+    setIntervalId(null)
+    setTimeoutId(null)
+    setRemaining(0)
+    setIsPlaying(false)
+    if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current.currentTime = 0
+    }
+  }
 
   const handlePlayPause = () => {
     const audio = audioRef.current
     if (!audio) return
     // Si está sonando, pausar y limpiar
     if (isPlaying) {
-      audio.pause()
-      setIsPlaying(false)
-      if (intervalId) clearInterval(intervalId)
-      setRemaining(0)
+      cleanAudio()
       return
     }
     // Siempre reiniciar desde el inicio
     audio.currentTime = 0
     audio.volume = 0.3
-    audio.play()
+    audio.play().catch(() => setIsPlaying(false))
     setIsPlaying(true)
     setRemaining(stepDurations[step])
     // Iniciar contador regresivo
@@ -42,20 +54,19 @@ export const SongPlayer: React.FC = () => {
       })
     }, 10)
     setIntervalId(id)
-    setTimeout(() => {
-      audio.pause()
-      setIsPlaying(false)
-      clearInterval(id)
-      setRemaining(0)
+    const tId = setTimeout(() => {
+      cleanAudio()
     }, stepDurations[step] * 1000)
+    setTimeoutId(tId)
   }
 
-  // Limpiar interval al desmontar
+  // Limpiar interval y timeout al desmontar o cuando cambia la canción
   useEffect(() => {
     return () => {
-      if (intervalId) clearInterval(intervalId)
+      cleanAudio()
     }
-  }, [intervalId])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [song])
 
   useEffect(() => {
     const audio = audioRef.current

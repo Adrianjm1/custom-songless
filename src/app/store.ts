@@ -27,6 +27,9 @@ interface SongStore {
   setSuggestions: (suggestions: Suggestion[]) => void
   isPlaying: boolean
   setIsPlaying: (isPlaying: boolean) => void
+  guessedSongs: number
+  setGuessedSongs: (count: number) => void
+  reset: () => void
 }
 
 export const useSongStore = create<SongStore>((set) => ({
@@ -44,4 +47,16 @@ export const useSongStore = create<SongStore>((set) => ({
   setSuggestions: (suggestions: Suggestion[]) => set({ suggestions }),
   isPlaying: false,
   setIsPlaying: (isPlaying: boolean) => set({ isPlaying }),
+  guessedSongs: 0,
+  setGuessedSongs: (count: number) => set({ guessedSongs: count }),
+  reset: () =>
+    set({
+      song: null,
+      step: 1,
+      loading: false,
+      started: false,
+      guess: "",
+      suggestions: [],
+      isPlaying: false,
+    }),
 }))

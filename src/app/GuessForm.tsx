@@ -62,14 +62,6 @@ export const GuessForm: React.FC<{ onSubmit: (e: React.FormEvent) => void }> = (
           ))}
         </ul>
       )}
-
-      <button
-        type="submit"
-        className="bg-purple-600 px-4 py-1 rounded text-white font-semibold mt-1 hover:bg-purple-700 transition"
-        disabled={loading || !guess || step === 5}
-      >
-        Adivinar
-      </button>
     </form>
   )
 }
