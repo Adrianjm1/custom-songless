@@ -140,10 +140,10 @@ export default function Page() {
       </h1>
       {/* Si no ha iniciado, mostrar botón Start */}
       {!started && (
-        <div className="text-center mb-8 flex flex-col items-center gap-5 bg-primary/10 rounded-lg p-4">
+        <div className="text-center mb-8 flex flex-col items-center gap-5 text-white bg-primary/10 rounded-lg p-4">
           <p>¡Bienvenido a Songless Latino! Adivina la canción.</p>
           <button
-            className="bg-success px-8 py-3 rounded text-xl font-bold mb-4 text-accent hover:bg-primary transition"
+            className="bg-alt2 cursor-pointer px-8 py-3 rounded text-xl font-bold mb-4 text-accent hover:bg-primary transition"
             onClick={() => setStarted(true)}
           >
             Start
