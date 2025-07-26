@@ -90,7 +90,7 @@ export const SongPlayer: React.FC = () => {
       <audio ref={audioRef} src={song?.preview || ""} preload="auto" />
       <div className="flex items-center gap-4 mb-2">
         <button
-          className={`px-6 py-2 rounded text-lg font-semibold transition ${
+          className={`px-6 text-white cursor-pointer py-2 rounded text-lg font-semibold transition ${
             isPlaying ? "bg-red-600 hover:bg-red-700" : "bg-blue-600 hover:bg-blue-700"
           } flex items-center justify-center`}
           onClick={handlePlayPause}

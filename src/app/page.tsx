@@ -134,13 +134,18 @@ export default function Page() {
 
   // Renderizado principal
   return (
-    <main className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white p-4">
-      <h1 className="text-3xl font-bold mb-4">Songless Latino</h1>
+    <main className="flex flex-col items-center justify-center min-h-screen bg-background text-primary p-4 gap-5">
+      <h1 className="text-3xl font-bold mb-4 text-white">
+        <span className="text-alt2">Beat</span>Less
+      </h1>
       {/* Si no ha iniciado, mostrar botón Start */}
       {!started && (
-        <div className="text-center mb-8 flex flex-col items-center gap-5">
+        <div className="text-center mb-8 flex flex-col items-center gap-5 bg-primary/10 rounded-lg p-4">
           <p>¡Bienvenido a Songless Latino! Adivina la canción.</p>
-          <button className="bg-yellow-500 px-8 py-3 rounded text-xl font-bold mb-4 hover:bg-yellow-600 transition" onClick={() => setStarted(true)}>
+          <button
+            className="bg-success px-8 py-3 rounded text-xl font-bold mb-4 text-accent hover:bg-primary transition"
+            onClick={() => setStarted(true)}
+          >
             Start
           </button>
         </div>
@@ -149,22 +154,22 @@ export default function Page() {
       {started && loading && <p>Cargando canción...</p>}
       {/* Si hay canción, mostrar reproductor y controles */}
       {started && song && (
-        <div className="flex flex-col items-center">
+        <div className="flex flex-col items-center gap-8">
           <StepIndicator />
           <SongPlayer />
           <GuessForm onSubmit={handleGuess} />
           {step < 5 && (
             <div className="flex gap-4 ">
               <button
-                className="bg-green-600 px-4 py-1 rounded text-lg font-semibold  hover:bg-green-700 transition"
+                className="bg-alt2 cursor-pointer px-4 py-1 rounded text-lg font-semibold text-white hover:bg-primary transition"
                 onClick={handleNext}
                 disabled={step >= 5 || loading}
               >
-                Next
+                Siguiente
               </button>
               <button
                 onClick={handleGuess}
-                className="bg-purple-600 px-4 py-1 rounded text-white font-semibold  hover:bg-purple-700 transition"
+                className="bg-third cursor-pointer hover:text-white px-4 py-1 rounded text-accent font-semibold hover:bg-primary transition"
                 disabled={loading || !guess || step === 5}
               >
                 Adivinar
@@ -172,12 +177,12 @@ export default function Page() {
             </div>
           )}
 
-          <button className="bg-gray-700 px-4 py-1 rounded text-sm mt-2 hover:bg-gray-800 transition" onClick={fetchSong} disabled={loading}>
+          {/* <button className="bg-gray-700 px-4 py-1 rounded text-sm mt-2 hover:bg-gray-800 transition" onClick={fetchSong} disabled={loading}>
             Nueva canción
-          </button>
+          </button> */}
           <div className="mt-6 text-center">
-            <p className="text-lg font-semibold">Pista: {step}/5</p>
-            <p className="text-md mt-2">¿Adivinas la canción?</p>
+            {/* <p className="text-lg font-semibold">Pista: {step - 1}/4</p> */}
+            {/* <p className="text-md mt-2">¿Adivinas la canción?</p> */}
             {step === 5 && <SongResult cover={song.cover} title={song.title} artist={song.artist} />}
           </div>
         </div>
