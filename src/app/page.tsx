@@ -151,7 +151,7 @@ export default function Page() {
         </div>
       )}
       {/* Mensaje de carga */}
-      {started && loading && <p>Cargando canción...</p>}
+      {started && loading && <p className="text-white">Cargando canción...</p>}
       {/* Si hay canción, mostrar reproductor y controles */}
       {started && song && (
         <div className="flex flex-col items-center gap-8">
