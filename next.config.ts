@@ -1,11 +1,14 @@
 import type { NextConfig } from "next"
 
-const nextConfig = {
+const nextConfig: NextConfig = {
   reactStrictMode: true,
   images: {
-    domains: ["cdn-images.dzcdn.net"],
+    // Portadas de Deezer y, como respaldo, de iTunes
+    remotePatterns: [
+      { protocol: "https", hostname: "*.dzcdn.net" },
+      { protocol: "https", hostname: "*.mzstatic.com" },
+    ],
   },
 }
-module.exports = nextConfig
 
 export default nextConfig
