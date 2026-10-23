@@ -1,6 +1,6 @@
 import { CATALOG_SOURCES, type CatalogSource, sourcePath } from "./catalog-sources"
 import type { GenreId } from "./genres"
-import { cleanTitle } from "./matching"
+import { cleanTitle, normalize } from "./matching"
 import type { CatalogEntry } from "./popularity"
 import type { Song, Suggestion } from "./types"
 
@@ -25,7 +25,7 @@ interface DeezerTrack {
   link: string
   rank: number
   readable?: boolean
-  artist: { name: string }
+  artist: { id: number; name: string }
   album: { title: string; cover_small: string; cover_medium: string; cover_xl: string }
 }
 
@@ -42,10 +42,16 @@ async function request<T>(path: string, init: RequestInit): Promise<T> {
   return body
 }
 
+// Deezer a veces tiene el mismo artista duplicado con otro id, así que también se compara el nombre
+export function isMainArtist(track: Pick<DeezerTrack, "artist">, source: Pick<CatalogSource, "id" | "name">): boolean {
+  return track.artist.id === source.id || normalize(track.artist.name) === normalize(source.name)
+}
+
 async function fetchSource(source: CatalogSource): Promise<DeezerTrack[]> {
   try {
     const { data = [] } = await request<{ data?: DeezerTrack[] }>(sourcePath(source), { next: { revalidate: CATALOG_REVALIDATE_SECONDS } })
-    return data
+    // El top de un artista incluye temas donde solo colabora (p. ej. Thalía en "Color Esperanza 2020")
+    return source.type === "artist" ? data.filter((t) => isMainArtist(t, source)) : data
   } catch (error) {
     // Una fuente caída no debe dejar el género vacío
     console.warn(`[deezer] fuente "${source.name}" no disponible:`, error)
