@@ -78,6 +78,11 @@ export const FlameIcon = (p: IconProps) => (
     <path d="M12 22c4 0 7-2.7 7-7 0-4.5-3.5-7.5-5-11-1 3-3 4.5-4 5.5C8.5 8 8 6.5 8 5c-2 2-3 5-3 8 0 5 3 9 7 9Z" fill="currentColor" stroke="none" />
   </Icon>
 )
+export const CoffeeIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M4 9h12v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V9ZM16 10h1.5a2.5 2.5 0 0 1 0 5H16M8 3c-.5.8.5 1.7 0 2.5M12 3c-.5.8.5 1.7 0 2.5" />
+  </Icon>
+)
 export const LogoIcon = (p: IconProps) => (
   <Icon {...p}>
     <path d="M4 10v4M8 6v12M12 3v18M16 7v10M20 10v4" />
